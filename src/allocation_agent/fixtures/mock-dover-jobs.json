@@ -1,0 +1,50 @@
+[
+  {
+    "company": "ExampleCo",
+    "companySlug": "exampleco",
+    "jobId": "nyc-001-backend",
+    "title": "Senior Backend EngineerIn Office (New York, NY)",
+    "locations": "New York, NY",
+    "url": "https://example.com/jobs/nyc-001"
+  },
+  {
+    "company": "FinTechNY",
+    "companySlug": "fintechny",
+    "jobId": "nyc-002-fullstack",
+    "title": "Software Engineer, Full StackHybrid (New York City, NY)",
+    "locations": "",
+    "url": "https://example.com/jobs/nyc-002"
+  },
+  {
+    "company": "StartupA",
+    "companySlug": "startupa",
+    "jobId": "nyc-003-ml",
+    "title": "Machine Learning EngineerRemote (New York, NY)",
+    "locations": "",
+    "url": "https://example.com/jobs/nyc-003"
+  },
+  {
+    "company": "HealthCo",
+    "companySlug": "healthco",
+    "jobId": "nyc-004-platform",
+    "title": "Platform Engineer — NYCIn Office (Brooklyn, NY)",
+    "locations": "",
+    "url": "https://example.com/jobs/nyc-004"
+  },
+  {
+    "company": "BadTitle",
+    "companySlug": "bad",
+    "jobId": "filter-intern",
+    "title": "Software Engineer InternSummer 2026 (Remote)",
+    "locations": "",
+    "url": "https://example.com/jobs/intern"
+  },
+  {
+    "company": "RemoteEU",
+    "companySlug": "remoteeu",
+    "jobId": "filter-eu",
+    "title": "Senior Software EngineerRemote (Berlin, Germany)",
+    "locations": "Berlin",
+    "url": "https://example.com/jobs/eu"
+  }
+]

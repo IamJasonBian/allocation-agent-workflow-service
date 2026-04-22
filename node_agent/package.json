@@ -1,0 +1,13 @@
+{
+  "name": "allocation-agent-node-runner",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "Single-job Puppeteer apply runner invoked by Celery workers",
+  "scripts": {
+    "apply": "node apply.mjs"
+  },
+  "dependencies": {
+    "puppeteer-core": "^23.0.0"
+  }
+}
