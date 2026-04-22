@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     apply_rate_limit: str = "30/m"
     """Path to Dover-shaped JSON array (job feed)."""
     dover_jobs_path: Path = Field(default=_DEFAULT_DOVER)
+    """Which job sources `load_candidates()` pulls from. Registry in `sources/__init__.py`."""
+    enabled_sources: list[str] = Field(default_factory=lambda: ["dover"])
     """`mock` skips Node/Puppeteer (tests, dry runs). `node` runs `node_agent/apply.mjs`."""
     apply_mode: str = "mock"
     """Deterministic mock outcomes when `apply_mode=mock` (0–99)."""
