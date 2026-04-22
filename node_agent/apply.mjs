@@ -238,7 +238,19 @@ async function apply(dispatch, profile) {
       });
     }
 
-    // Submit — try common submit button selectors
+    // Install pre-submit observations + network listener.
+    const urlBefore = page.url();
+    const submitResponses = [];
+    const onResponse = (r) => {
+      try {
+        if (r.request().method() !== "POST") return;
+        submitResponses.push({ status: r.status(), url: r.url(), t: Date.now() });
+      } catch (_) {
+        // page/target closed; ignore
+      }
+    };
+    page.on("response", onResponse);
+
     const submitSelectors = [
       'button[type="submit"]',
       'button:has-text("Submit")',
@@ -246,10 +258,12 @@ async function apply(dispatch, profile) {
       'input[type="submit"]',
     ];
     let submitted = false;
+    let clickTime = 0;
     for (const sel of submitSelectors) {
       const btn = await page.$(sel).catch(() => null);
       if (btn) {
         assertNotInterrupted(page);
+        clickTime = Date.now();
         await btn.click().catch(() => {});
         submitted = true;
         break;
@@ -257,21 +271,48 @@ async function apply(dispatch, profile) {
     }
 
     if (!submitted) {
+      page.off("response", onResponse);
       return outcome(dispatch, "error", "no submit button found", {
         wallclock_ms: Date.now() - t0,
       });
     }
 
     await new Promise((r) => setTimeout(r, 4000));
+    page.off("response", onResponse);
 
-    const finalText = await page.evaluate(() => document.body?.innerText?.slice(0, 600) || "");
-    if (/thank you|received|submitted|success/i.test(finalText)) {
-      return outcome(dispatch, "submitted", "confirmation text detected", {
+    // Converging signals — any one is weak, two is plausible, three+ is strong.
+    const urlAfter = page.url();
+    const formGone = await page.evaluate(() =>
+      !document.querySelector('input[name="firstName"], input[name="email"], input[type="email"]')
+    );
+    const finalText = await page.evaluate(() =>
+      document.body?.innerText?.slice(0, 600) || ""
+    );
+    const serverAck = submitResponses.some(
+      (r) => r.t >= clickTime && r.status >= 200 && r.status < 300,
+    );
+
+    const signals = {
+      server_ack: serverAck,
+      url_changed: urlBefore !== urlAfter,
+      form_gone: formGone,
+      text_match: /thank you|received|submitted|success/i.test(finalText),
+    };
+    const score = Object.values(signals).filter(Boolean).length;
+    const signalStr = JSON.stringify(signals);
+
+    if (score >= 2) {
+      return outcome(dispatch, "submitted", `confirmed score=${score} ${signalStr}`, {
         wallclock_ms: Date.now() - t0,
       });
     }
-
-    return outcome(dispatch, "submitted", "submit clicked, no confirmation", {
+    if (score === 1) {
+      return outcome(dispatch, "submitted", `soft score=1 ${signalStr}`, {
+        wallclock_ms: Date.now() - t0,
+      });
+    }
+    // Zero signals — likely form validation rejected the submit. Retry.
+    return outcome(dispatch, "error", `submit ambiguous ${signalStr}`, {
       wallclock_ms: Date.now() - t0,
     });
   } catch (e) {

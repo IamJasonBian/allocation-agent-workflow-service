@@ -15,11 +15,17 @@ from typing import Callable, Iterable, Optional
 from ..config import settings
 from ..schemas import JobCandidate
 from .base import JobSource
+from .crawler import CrawlerSource
 from .dover import DoverSource
 
 
 _REGISTRY: dict[str, Callable[[], JobSource]] = {
     "dover": lambda: DoverSource(),
+    "crawler": lambda: CrawlerSource(
+        base_url=settings.crawler_base_url,
+        state_path=settings.crawler_state_path,
+        use_http=settings.crawler_use_http,
+    ),
 }
 
 
@@ -55,4 +61,10 @@ def load_candidates(
     return ranked
 
 
-__all__ = ["JobSource", "DoverSource", "load_candidates", "resolve_sources"]
+__all__ = [
+    "JobSource",
+    "DoverSource",
+    "CrawlerSource",
+    "load_candidates",
+    "resolve_sources",
+]

@@ -75,3 +75,11 @@ def test_load_candidates_real_default_sources_returns_list():
     out = load_candidates()
     assert isinstance(out, list)
     assert all(isinstance(c, JobCandidate) for c in out)
+
+
+def test_settings_json_enabled_sources(monkeypatch):
+    monkeypatch.setenv("ENABLED_SOURCES", '["dover", "crawler"]')
+    from allocation_agent.config import Settings
+
+    s = Settings()
+    assert s.enabled_sources == ["dover", "crawler"]
