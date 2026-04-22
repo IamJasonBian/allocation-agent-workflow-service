@@ -1,0 +1,34 @@
+[
+  {
+    "company": "HappyCo1",
+    "companySlug": "happyco1",
+    "jobId": "happy-1",
+    "title": "Senior Software Engineer (fixture-happy)",
+    "locations": "New York, NY",
+    "url": "http://127.0.0.1:9999/jobs/happy/happy-1"
+  },
+  {
+    "company": "HappyCo2",
+    "companySlug": "happyco2",
+    "jobId": "happy-2",
+    "title": "Senior Backend Engineer (fixture-happy)",
+    "locations": "New York, NY",
+    "url": "http://127.0.0.1:9999/jobs/happy/happy-2"
+  },
+  {
+    "company": "BrokenCo1",
+    "companySlug": "brokenco1",
+    "jobId": "broken-1",
+    "title": "Senior Platform Engineer (fixture-broken)",
+    "locations": "New York, NY",
+    "url": "http://127.0.0.1:9999/jobs/broken/broken-1"
+  },
+  {
+    "company": "BrokenCo2",
+    "companySlug": "brokenco2",
+    "jobId": "broken-2",
+    "title": "Senior Data Engineer (fixture-broken)",
+    "locations": "New York, NY",
+    "url": "http://127.0.0.1:9999/jobs/broken/broken-2"
+  }
+]

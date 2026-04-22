@@ -22,7 +22,6 @@ allocation-agent = "allocation_agent.cli:cli"
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
-    "httpx>=0.27",
 ]
 
 [build-system]
@@ -35,3 +34,6 @@ packages = ["src/allocation_agent"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+markers = [
+    "e2e: needs finder-mock + RUN_FINDER_E2E=1 (subprocess, real HTTP)",
+]
