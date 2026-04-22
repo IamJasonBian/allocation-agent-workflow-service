@@ -26,3 +26,38 @@ def test_record_outcome_task_ok(memory_db):
         }
     )
     assert isinstance(rid, int)
+
+
+def test_record_outcome_task_transitions_ledger(memory_db):
+    from allocation_agent.stores.feedback import list_applications
+
+    record_outcome_task.run(
+        {
+            "candidate_id": "a",
+            "job_id": "b",
+            "ats": "unknown",
+            "status": "submitted",
+            "message": "",
+            "tokens_spent": 0,
+            "wallclock_ms": 0,
+        }
+    )
+    rows = {r["job_id"]: r for r in list_applications("a")}
+    assert rows["b"]["state"] == "done"
+
+
+def test_record_outcome_task_captcha_sets_backoff(memory_db):
+    from allocation_agent.stores.feedback import list_applications
+
+    record_outcome_task.run(
+        {
+            "candidate_id": "a",
+            "job_id": "b",
+            "ats": "unknown",
+            "status": "captcha",
+            "message": "",
+        }
+    )
+    rows = {r["job_id"]: r for r in list_applications("a")}
+    assert rows["b"]["state"] == "eligible"
+    assert rows["b"]["wait_until"] is not None  # backoff set

@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+from typing import Iterable
 
 from ..config import settings
 from ..schemas import JobCandidate
@@ -86,8 +87,20 @@ def score_priority(title: str) -> float:
     return min(score, 1.0)
 
 
-def load_dover_candidates(path: Path | None = None) -> list[JobCandidate]:
-    path = path or settings.dover_jobs_path
+class DoverSource:
+    """Dover-shaped JSON file on disk. One row per posting."""
+
+    name = "dover"
+
+    def __init__(self, path: Path | None = None) -> None:
+        self.path = path or settings.dover_jobs_path
+
+    def iter_candidates(self) -> Iterable[JobCandidate]:
+        for c in _read_and_map(self.path):
+            yield c
+
+
+def _read_and_map(path: Path) -> list[JobCandidate]:
     raw = json.loads(path.read_text())
     out: list[JobCandidate] = []
     for r in raw:
@@ -108,3 +121,8 @@ def load_dover_candidates(path: Path | None = None) -> list[JobCandidate]:
         )
     out.sort(key=lambda j: j.expected_callback_prob, reverse=True)
     return out
+
+
+def load_dover_candidates(path: Path | None = None) -> list[JobCandidate]:
+    """Backwards-compatible shim. Prefer `load_candidates()` from `..sources`."""
+    return _read_and_map(path or settings.dover_jobs_path)
