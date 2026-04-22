@@ -202,6 +202,29 @@ def pick_work(
     return picked
 
 
+def reclaim_expired_leases(candidate_id: str | None = None) -> int:
+    """Flip `in_flight` rows whose lease has expired back to `eligible`.
+
+    Runs as a Celery beat task (and is also applied lazily by `pick_work`).
+    Returns the count of rows reclaimed.
+    """
+    now = datetime.utcnow()
+    with Session(get_engine()) as s:
+        q = s.query(ApplicationRow).filter(
+            ApplicationRow.state == "in_flight",
+            ApplicationRow.wait_until.isnot(None),
+            ApplicationRow.wait_until < now,
+        )
+        if candidate_id is not None:
+            q = q.filter(ApplicationRow.candidate_id == candidate_id)
+        rows = q.all()
+        for row in rows:
+            row.state = "eligible"
+            row.wait_until = None
+        s.commit()
+        return len(rows)
+
+
 def transition_on_outcome(outcome: ApplyOutcome) -> str:
     """Update the applications ledger based on an ApplyOutcome.
 

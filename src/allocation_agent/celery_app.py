@@ -32,4 +32,11 @@ app.conf.update(
     task_soft_time_limit=540,
     timezone="UTC",
     enable_utc=True,
+    beat_schedule={
+        "reclaim-expired-leases": {
+            "task": "allocation_agent.tasks.select.reclaim_leases",
+            "schedule": 300.0,   # every 5 min
+            "options": {"queue": "select"},
+        },
+    },
 )

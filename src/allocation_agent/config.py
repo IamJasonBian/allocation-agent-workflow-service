@@ -4,6 +4,8 @@ from typing import Literal
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+CrawlerHttpBackend = Literal["finder", "allocation_crawler"]
+
 _DEFAULT_DOVER = Path(__file__).resolve().parent / "fixtures" / "mock-dover-jobs.json"
 
 
@@ -18,9 +20,16 @@ class Settings(BaseSettings):
     dover_jobs_path: Path = Field(default=_DEFAULT_DOVER)
     """Which job sources `load_candidates()` uses. Env ``ENABLED_SOURCES`` is JSON, e.g. ``["dover","crawler"]``."""
     enabled_sources: list[str] = Field(default_factory=lambda: ["dover"])
-    """Base URL: finder-mock or future crawler read API (see `CrawlerSource._fetch_http`)."""
+    """API root. Examples: `http://127.0.0.1:8765` (finder-mock), or Netlify
+    `https://allocation-crawler-service.netlify.app/api/crawler` (see `crawler_http_backend`)."""
     crawler_base_url: str = "http://127.0.0.1:8765"
-    """When True, `CrawlerSource` calls GET `{crawler_base_url}/v1/jobs` (e.g. finder-mock). When False, uses in-process mock list."""
+    """`finder` → GET ``/v1/jobs`` (finder-mock). `allocation_crawler` → GET ``/jobs?status=…`` (Netlify service)."""
+    crawler_http_backend: CrawlerHttpBackend = "finder"
+    """When using ``allocation_crawler`` without ``crawler_alloc_board``, cap rows pulled (API may return full list)."""
+    crawler_alloc_max_rows: int = Field(default=300, ge=1, le=10_000)
+    """For ``allocation_crawler``: optional ``board`` id (e.g. ``figma``, ``coinbase``) to scope jobs. Empty = all boards then cap."""
+    crawler_alloc_board: str = ""
+    """When True, `CrawlerSource` calls the HTTP backend. When False, uses in-process mock list."""
     crawler_use_http: bool = False
     crawler_state_path: Path = Field(
         default_factory=lambda: Path.home() / ".cache/allocation-agent/crawler-hwm",

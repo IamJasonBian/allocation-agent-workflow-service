@@ -3,6 +3,10 @@ import json
 import click
 
 from .config import settings
+from .integrations.allocation_crawler import (
+    greenhouse_board_frontier_url,
+    list_boards,
+)
 from .stores.feedback import (
     list_applications,
     pick_work,
@@ -51,13 +55,87 @@ def finder_status_cmd() -> None:
     click.echo(json.dumps(finder_status(), indent=2))
 
 
+@finder_group.command("ping")
+def finder_ping_cmd() -> None:
+    """Return exit 0 if GET /health on ``CRAWLER_BASE_URL`` succeeds (finder-mock up)."""
+    from .integrations.finder import finder_reachable
+
+    if finder_reachable():
+        click.echo("ok")
+        return
+    raise click.ClickException("finder not reachable (start finder-mock on crawler_base_url)")
+
+
+_DEFAULT_ALLOC_API = "https://allocation-crawler-service.netlify.app/api/crawler"
+
+
+@cli.group("crawler")
+def crawler_group() -> None:
+    """Query the public Allocation Crawler API (board list, Greenhouse frontiers)."""
+
+
+@crawler_group.command("boards")
+@click.option(
+    "--api-url",
+    default=_DEFAULT_ALLOC_API,
+    show_default=True,
+    help="Crawler API root (Allocation Crawler Service).",
+)
+@click.option(
+    "--ats",
+    "ats_filter",
+    default=None,
+    type=str,
+    help="Only print boards for this ATS (e.g. greenhouse).",
+)
+def crawler_boards_cmd(api_url: str, ats_filter: str | None) -> None:
+    """List registered boards. For each Greenhouse board, show a standard ``job-boards`` frontier URL."""
+    base = api_url.rstrip("/")
+    data = list_boards(base)
+    boards = data.get("boards") or []
+    if ats_filter:
+        t = ats_filter.strip().lower()
+        boards = [b for b in boards if (b or {}).get("ats", "").lower() == t]
+    # Keep output stable and small for a quick look.
+    for b in sorted(boards, key=lambda x: (x or {}).get("company") or ""):
+        bid = b.get("id", "")
+        co = b.get("company", "")
+        ats = b.get("ats", "")
+        line = f"{ats}\t{co}\t{bid}"
+        if (ats or "").lower() == "greenhouse" and bid:
+            line += f"\t{greenhouse_board_frontier_url(bid)}"
+        click.echo(line)
+
+
 @cli.command("select-tick")
 @click.option("--candidate-id", required=True)
 @click.option("--queue-size", default=5, show_default=True)
-def select_tick(candidate_id: str, queue_size: int) -> None:
+@click.option(
+    "--random",
+    "random_sample",
+    is_flag=True,
+    help="Testing: random sample of the eligible pool instead of ranked top-N.",
+)
+@click.option(
+    "--seed",
+    type=int,
+    default=None,
+    help="Seed --random for reproducibility; leave unset for a fresh sample each run.",
+)
+def select_tick(
+    candidate_id: str,
+    queue_size: int,
+    random_sample: bool,
+    seed: int | None,
+) -> None:
     """Enqueue a selector tick for a candidate."""
-    res = tick.apply_async(args=[candidate_id, queue_size], queue="select")
-    click.echo(f"queued select tick: {res.id}")
+    res = tick.apply_async(
+        args=[candidate_id, queue_size],
+        kwargs={"random_sample": random_sample, "seed": seed},
+        queue="select",
+    )
+    mode = "random-sample" if random_sample else "ranked"
+    click.echo(f"queued select tick ({mode}): {res.id}")
 
 
 @cli.command("simulate")
