@@ -53,7 +53,7 @@ Requires Python 3.11+, Docker, `uv` (or pip).
 ```bash
 cd /Users/jasonzb/Desktop/apollo/gamma/allocation-agent
 
-# 1. Start Redis
+# 1. Start Redis + Flower (Celery dashboard at http://localhost:5555)
 docker compose up -d
 
 # 2. Install deps
