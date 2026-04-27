@@ -44,5 +44,21 @@ class Settings(BaseSettings):
     """Seconds the Chrome tab may be hidden before the runner aborts with `interrupted`."""
     isolation_focus_loss_grace_s: float = Field(default=3.0, ge=0.5)
 
+    # ── Slug discovery ────────────────────────────────────────────────────────
+    """Base URL for the Allocation Crawler API (used by slug discovery task to read boards & POST new ones)."""
+    discovery_api_base: str = "https://allocation-crawler-service.netlify.app/api/crawler"
+    """Bearer token for POST /boards (leave empty if the endpoint is open)."""
+    alloc_crawler_api_key: str = ""
+    """SerpAPI key for Google search discovery (SERPAPI_KEY). Skipped when empty."""
+    serpapi_key: str = ""
+    """LinkedIn ``li_at`` session cookie for authenticated job search (LI_AT_COOKIE). Optional."""
+    li_at_cookie: str = ""
+    """Ordered list of slug discovery strategies to run each day."""
+    discovery_enabled_strategies: list[str] = Field(
+        default_factory=lambda: ["hn_posts", "google_search", "linkedin", "other"]
+    )
+    """Include YC company directory as a slug source (adds latency; guesses ATS from name)."""
+    discovery_include_yc: bool = False
+
 
 settings = Settings()

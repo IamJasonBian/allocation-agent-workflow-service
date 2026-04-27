@@ -24,6 +24,45 @@ def list_boards(api_base: str, timeout_s: float = 30.0) -> dict[str, Any]:
         return r.json()
 
 
+def get_existing_board_ids(api_base: str, timeout_s: float = 30.0) -> set[str]:
+    """Return the set of board ``id`` strings already registered in the crawler service."""
+    data = list_boards(api_base, timeout_s=timeout_s)
+    return {b.get("id", "") for b in (data.get("boards") or []) if b.get("id")}
+
+
+def seed_board(
+    api_base: str,
+    board_id: str,
+    company: str,
+    ats: str,
+    career_page_url: str = "",
+    api_key: str = "",
+    timeout_s: float = 30.0,
+) -> dict[str, Any]:
+    """POST ``{api_base}/boards`` — register one new board slug.
+
+    Raises :class:`httpx.HTTPStatusError` on 4xx/5xx so callers can decide
+    whether to skip (409 Conflict = already exists) or abort.
+    """
+    b = api_base.rstrip("/")
+    headers: dict[str, str] = {}
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+    with httpx.Client(timeout=timeout_s) as client:
+        r = client.post(
+            f"{b}/boards",
+            json={
+                "id": board_id,
+                "company": company,
+                "ats": ats,
+                "career_page_url": career_page_url,
+            },
+            headers=headers,
+        )
+        r.raise_for_status()
+        return r.json()
+
+
 def greenhouse_board_frontier_url(board_id: str) -> str:
     """Typical public Greenhouse **job board** (listings) URL for a board slug.
 

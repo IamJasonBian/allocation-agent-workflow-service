@@ -7,6 +7,7 @@ from .integrations.allocation_crawler import (
     greenhouse_board_frontier_url,
     list_boards,
 )
+from .tasks.slug_discovery import _run_discovery
 from .stores.feedback import (
     list_applications,
     pick_work,
@@ -105,6 +106,36 @@ def crawler_boards_cmd(api_url: str, ats_filter: str | None) -> None:
         if (ats or "").lower() == "greenhouse" and bid:
             line += f"\t{greenhouse_board_frontier_url(bid)}"
         click.echo(line)
+
+
+@crawler_group.command("discover")
+@click.option(
+    "--api-url",
+    default=None,
+    help="Crawler API root (overrides DISCOVERY_API_BASE / settings).",
+)
+@click.option(
+    "--dry-run",
+    "dry_run",
+    is_flag=True,
+    help="Log what would be seeded without POSTing to the API.",
+)
+@click.option(
+    "--strategies",
+    default=None,
+    help="Comma-separated strategy names to run (e.g. hn_posts,other). "
+         "Defaults to DISCOVERY_ENABLED_STRATEGIES.",
+)
+def crawler_discover_cmd(api_url: str | None, dry_run: bool, strategies: str | None) -> None:
+    """Discover new board slugs and seed them into the crawler service.
+
+    Combines post discovery (HN Who's Hiring), LinkedIn job search, Google
+    search (SerpAPI), and ATS sitemap scraping to surface new company slugs,
+    then POSTs any that aren't already registered.  Prints a JSON summary.
+    """
+    enabled = [s.strip() for s in strategies.split(",")] if strategies else None
+    result = _run_discovery(dry_run=dry_run, api_base=api_url, enabled_strategies=enabled)
+    click.echo(json.dumps(result, indent=2))
 
 
 @cli.command("select-tick")
