@@ -17,7 +17,11 @@ from ..stores.feedback import recent_outcomes
 QUEUE_NAMES = ("select", "apply", "feedback")
 INSPECT_CACHE_TTL = 2.0
 
-app = FastAPI(title="allocation-agent dashboard", version="0.1.0")
+app = FastAPI(
+    title="allocation-agent dashboard",
+    version="0.1.0",
+    description="[← Operator dashboard](/) · [Flower](http://localhost:5555)",
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=os.environ.get("DASHBOARD_CORS", "*").split(","),
