@@ -30,6 +30,8 @@ app.conf.update(
     worker_prefetch_multiplier=1,
     task_time_limit=600,
     task_soft_time_limit=540,
+    worker_send_task_events=True,
+    task_send_sent_event=True,
     timezone="UTC",
     enable_utc=True,
     beat_schedule={
